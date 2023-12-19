@@ -7,7 +7,7 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-  [GMSServices provideAPIKey:@""];
+  [GMSServices provideAPIKey:@"AIzaSyB6S8ONBEWAW23vewOzX6Rv3V5xs0qcNZ0"];
 
   self.moduleName = @"myapp";
   self.initialProps = @{};
