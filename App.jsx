@@ -1,19 +1,20 @@
 import React from 'react'
 import { Platform, SafeAreaView, StatusBar, Text, View } from 'react-native'
-import MapScreen from './src/screens/MapScreen'
+import { NavigationContainer } from '@react-navigation/native'
+import NativeStack from './src/navigator/NativeStack'
 
 function App() {
   return (
-    <>
+    <NavigationContainer>
     {
       Platform.OS === 'ios' ?
-      <MapScreen/> :
+      <NativeStack/> :
       <SafeAreaView style={{ flex: 1 }}>
       <StatusBar barStyle='light-content' backgroundColor={"transparent"} translucent={true} />
-      <MapScreen />
+      <NativeStack />
     </SafeAreaView>
     }
-    </>
+    </NavigationContainer>
     
   )
 }
