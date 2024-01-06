@@ -1,18 +1,23 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Image, Keyboard, Platform, StyleSheet, Text, View } from 'react-native'
-import MapView, { Marker, PROVIDER_GOOGLE, Polyline, LatLng } from 'react-native-maps'
+import React, {useEffect, useRef, useState } from 'react'
+import { Image, Keyboard, StyleSheet, Text, View } from 'react-native'
+import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps'
 import { mapStyleLight } from '../../utils/mapStyleLight'
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete'
 import { apiKeyAutocomplete } from '../../utils/apikeyautocomplete'
 import BottomSheet, { TouchableOpacity } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import Geolocation from 'react-native-geolocation-service';
-import { arrayRoutes, centerMap, newRegion } from './MapUtils'
+import { newRegion } from './MapUtils'
 import axios from 'axios'
+import Icon from 'react-native-vector-icons/Feather';
+import TypeCar from '../../components/TypeCar'
+import { useDispatch, useSelector } from 'react-redux'
+import { savePlace } from '../../redux/actions'
+
 
 const MapScreen = () => {
-  //https://dribbble.com/shots/15978599-Uber-App-Redesign/attachments/7815403?mode=media
-  //https://www.figma.com/file/gDvhZu46euencNMc7XxEPR/Uber-App-UI---Free-UI-Kit-(Recreated)-(Community)?type=design&node-id=2-978&mode=design&t=Zdq0du95Vo8tOH5B-0
+  const {places} = useSelector(state => state.places) 
+  const dispatch = useDispatch()
   const [placeLocation, setPlaceLocation] = useState({
     latitude: 0.0,
     longitude: 0.0
@@ -26,11 +31,10 @@ const MapScreen = () => {
   const [address, setAddress] = useState("Mi lugar favorito")
   const bottomSheetRef = useRef(null);
   const mapViewRef = useRef(null);
-
   const [keyboard, setKeyboard] = useState(false)
 
-
   useEffect(() => {
+    console.log(places)
     getCurrentLocation()
     setTimeout(() => {
       bottomSheetRef.current?.snapToIndex(0)
@@ -46,8 +50,9 @@ const MapScreen = () => {
       keyboardDidShowListener.remove();
       keyboardDidHideListener.remove();
     };
-
   }, [])
+
+
 
   useEffect(() => {
     if (keyboard) {
@@ -77,35 +82,32 @@ const MapScreen = () => {
     })
   }
 
-
+const saveNewPlace = objPlace => {
+  dispatch(savePlace(objPlace))
+}
 
   const arrayRoutes = async (longitude_start, latitude_start, longitude_end, latitude_end) => {
     try {
       setCoordinates([])
-      const resp = await axios.get(`https://api.openroutes
-      ervice.org/v2/directions/driving-car?api_key=
-      5b3ce3597851110001cf62483e809710dde24d08839059923d94ced4
-      &start=${longitude_start},${latitude_start}&end=${longitude_end},${latitude_end}`)
+      console.log("llegamos por aqui")
+      const resp = await axios.get(`https://api.openrouteservice.org/v2/directions/driving-car?api_key=5b3ce3597851110001cf62483e809710dde24d08839059923d94ced4&start=${longitude_start},${latitude_start}&end=${longitude_end},${latitude_end}`)
       var coordinatesResp = resp.data.features[0].geometry.coordinates
       var coordinatesObjects = coordinatesResp.map((item) => {
         return { latitude: item[1], longitude: item[0] }
       })
+      console.log(coordinatesObjects)
         setCoordinates(JSON.parse(JSON.stringify(coordinatesObjects)))
         centerTwoPoins()
     } catch (error) {
       return []
     }
-
   }
-
 
 
   return (
     <>
-
       <GestureHandlerRootView style={styles.containerBS}>
         <MapView
-          //mapType='terrain'
           ref={mapViewRef}
           customMapStyle={mapStyleLight}
           zoomControlEnabled={true}
@@ -118,8 +120,7 @@ const MapScreen = () => {
             longitude: currentLocation.longitude,
             latitudeDelta: 0.025,
             longitudeDelta: 0.0151,
-          }}
-        >
+          }}  >
           {
             (placeLocation.latitude === 0.0 && placeLocation.longitude === 0.0)
               ? <></>
@@ -156,23 +157,16 @@ const MapScreen = () => {
                 strokeWidth={4}
               />
               : <></>
-
-
           }
-
-
         </MapView>
 
         <BottomSheet
           ref={bottomSheetRef}
           index={1}
-          //snappoint in 15%
           snapPoints={['25%', '50%', '90%']}
           style={{ paddingHorizontal: 16}}
         >
           <Text style={{ fontSize: 18, fontWeight: '600', color: '#6B6B6B' }}>Find a trip </Text>
-
-
           <GooglePlacesAutocomplete
             placeholder='Where do you want to go?'
             fetchDetails={true}
@@ -184,19 +178,22 @@ const MapScreen = () => {
               location: '-8.11599 -79.02998',
               radius: 10000
             }}
-
-
             onPress={(data, details = null) => {
               var lat = details.geometry.location.lat
               var lng = details.geometry.location.lng
+              var newPlace = {
+                 title : details.formatted_address,
+                 description : data.description,
+                 lat,
+                 lng
+              }
+              saveNewPlace(newPlace)
               arrayRoutes(
                 currentLocation.longitude,
                 currentLocation.latitude,
                 lng,
                 lat
               )
-
-          
               setPlaceLocation({
                 latitude: lat,
                 longitude: lng
@@ -210,9 +207,6 @@ const MapScreen = () => {
                 centerTwoPoins()
 
               }
-
-
-
               //console.log(details.formatted_address)
               // console.log(data.description)
               // console.log(details.geometry.location.lat)
@@ -223,11 +217,14 @@ const MapScreen = () => {
             debounce={1000}
             textInputProps={{
               placeholderTextColor: '#6B6B6B',
-
             }}
+            
             styles={{
               container: {
-                width: "100%"
+                width: "100%",
+                position: 'absolute',
+                top:24,
+                zIndex:100
               },
               textInputContainer: {
                 borderRadius: 8,
@@ -243,6 +240,37 @@ const MapScreen = () => {
               }
             }}
           />
+          <View style={{flex:1, marginTop:60}}>
+            <TypeCar
+              name="UberX"
+              image="https://links.papareact.com/3pn"
+              description="Economy"
+              price="15"
+            
+            />
+            
+            <View style={{backgroundColor:'#EDEEF0', height:1, marginTop:16}}/>
+
+            <TypeCar
+              name="UberXL"
+              image="https://links.papareact.com/5w8"
+              description="Comfort"
+              price="22" />
+            <View style={{backgroundColor:'#EDEEF0', height:1, marginTop:16}}/>
+
+            <TypeCar
+              name="Uber LUX"
+              image="https://links.papareact.com/7pf"
+              description="Luxury"
+              price="27" />
+            <View style={{backgroundColor:'#EDEEF0', height:1, marginTop:16}}/>
+
+            <TypeCar
+              name="UberX"
+              image="https://links.papareact.com/3pn"
+              description="Economy"
+              price="15"/>
+          </View>
 
         </BottomSheet>
         <TouchableOpacity
@@ -255,7 +283,7 @@ const MapScreen = () => {
             }
           }}
           style={{
-            backgroundColor: '#3F4CFF',
+            backgroundColor: '#4285F4',
             borderRadius: 24,
             position: 'absolute',
             bottom: 220,
@@ -263,9 +291,10 @@ const MapScreen = () => {
             width: 50,
             height: 50,
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+
           }}>
-          <Text style={{ textAlign: 'center', color: 'white' }}>C</Text>
+          <Icon name="compass" size={30} color="#fff" />
         </TouchableOpacity>
       </GestureHandlerRootView>
 
@@ -275,7 +304,6 @@ const MapScreen = () => {
 
 export default MapScreen
 const styles = StyleSheet.create({
-
   containerBS: {
     flex: 1
   },
