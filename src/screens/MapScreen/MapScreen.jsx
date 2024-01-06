@@ -1,6 +1,6 @@
-import React, {useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Image, Keyboard, StyleSheet, Text, View } from 'react-native'
-import MapView, { Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps'
+import MapView, { Callout, Marker, PROVIDER_GOOGLE, Polyline } from 'react-native-maps'
 import { mapStyleLight } from '../../utils/mapStyleLight'
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete'
 import { apiKeyAutocomplete } from '../../utils/apikeyautocomplete'
@@ -13,10 +13,11 @@ import Icon from 'react-native-vector-icons/Feather';
 import TypeCar from '../../components/TypeCar'
 import { useDispatch, useSelector } from 'react-redux'
 import { savePlace } from '../../redux/actions'
+import PlaceItem from '../../components/PlaceItem'
 
 
-const MapScreen = () => {
-  const {places} = useSelector(state => state.places) 
+const MapScreen = nativeStack => {
+  const { places } = useSelector(state => state.places)
   const dispatch = useDispatch()
   const [placeLocation, setPlaceLocation] = useState({
     latitude: 0.0,
@@ -27,6 +28,7 @@ const MapScreen = () => {
     longitude: 0.0
   })
 
+  const [typeView, setTypeView] = useState('cars')
   const [coordinates, setCoordinates] = useState([])
   const [address, setAddress] = useState("Mi lugar favorito")
   const bottomSheetRef = useRef(null);
@@ -34,7 +36,6 @@ const MapScreen = () => {
   const [keyboard, setKeyboard] = useState(false)
 
   useEffect(() => {
-    console.log(places)
     getCurrentLocation()
     setTimeout(() => {
       bottomSheetRef.current?.snapToIndex(0)
@@ -51,8 +52,6 @@ const MapScreen = () => {
       keyboardDidHideListener.remove();
     };
   }, [])
-
-
 
   useEffect(() => {
     if (keyboard) {
@@ -82,22 +81,20 @@ const MapScreen = () => {
     })
   }
 
-const saveNewPlace = objPlace => {
-  dispatch(savePlace(objPlace))
-}
+  const saveNewPlace = objPlace => {
+    dispatch(savePlace(objPlace))
+  }
 
   const arrayRoutes = async (longitude_start, latitude_start, longitude_end, latitude_end) => {
     try {
       setCoordinates([])
-      console.log("llegamos por aqui")
       const resp = await axios.get(`https://api.openrouteservice.org/v2/directions/driving-car?api_key=5b3ce3597851110001cf62483e809710dde24d08839059923d94ced4&start=${longitude_start},${latitude_start}&end=${longitude_end},${latitude_end}`)
       var coordinatesResp = resp.data.features[0].geometry.coordinates
       var coordinatesObjects = coordinatesResp.map((item) => {
         return { latitude: item[1], longitude: item[0] }
       })
-      console.log(coordinatesObjects)
-        setCoordinates(JSON.parse(JSON.stringify(coordinatesObjects)))
-        centerTwoPoins()
+      setCoordinates(JSON.parse(JSON.stringify(coordinatesObjects)))
+      centerTwoPoins()
     } catch (error) {
       return []
     }
@@ -128,7 +125,38 @@ const saveNewPlace = objPlace => {
                 identifier='destination'
                 title={address}
                 coordinate={placeLocation}
+                opacity={1}
+                stopPropagation={true}
+                rotation={0}
+                tracksViewChanges={true}
+                flat={true}
               >
+                <Callout
+                  style={{
+                    borderRadius:40,
+                    elevation: 10,
+                    padding: 10,
+                    backgroundColor:'transparent',
+                    width: 200,
+                  }}
+                >
+                  <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: 'bold',
+                  }}
+                  >Este es tu destino:</Text>
+
+                  <Text
+                  style={{
+                    fontSize: 12,
+                    fontWeight: '600',
+                    color:'#4285F4'
+                  }}
+                  >
+                    {address}
+                  </Text>
+                </Callout>
                 <Image
                   style={{ width: 50, height: 50 }}
                   source={require('../../assets/marker_b.png')}
@@ -164,7 +192,7 @@ const saveNewPlace = objPlace => {
           ref={bottomSheetRef}
           index={1}
           snapPoints={['25%', '50%', '90%']}
-          style={{ paddingHorizontal: 16}}
+          style={{ paddingHorizontal: 16 }}
         >
           <Text style={{ fontSize: 18, fontWeight: '600', color: '#6B6B6B' }}>Find a trip </Text>
           <GooglePlacesAutocomplete
@@ -182,10 +210,10 @@ const saveNewPlace = objPlace => {
               var lat = details.geometry.location.lat
               var lng = details.geometry.location.lng
               var newPlace = {
-                 title : details.formatted_address,
-                 description : data.description,
-                 lat,
-                 lng
+                title: details.formatted_address,
+                description: data.description,
+                lat,
+                lng
               }
               saveNewPlace(newPlace)
               arrayRoutes(
@@ -205,26 +233,20 @@ const saveNewPlace = objPlace => {
                 mapViewRef.current.animateToRegion(region)
               } else {
                 centerTwoPoins()
-
               }
-              //console.log(details.formatted_address)
-              // console.log(data.description)
-              // console.log(details.geometry.location.lat)
-              // console.log(details.geometry.location.lng)
-
             }}
             nearbyPlacesAPI='GooglePlacesSearch'
             debounce={1000}
             textInputProps={{
               placeholderTextColor: '#6B6B6B',
             }}
-            
+
             styles={{
               container: {
                 width: "100%",
                 position: 'absolute',
-                top:24,
-                zIndex:100
+                top: 24,
+                zIndex: 100
               },
               textInputContainer: {
                 borderRadius: 8,
@@ -240,38 +262,111 @@ const saveNewPlace = objPlace => {
               }
             }}
           />
-          <View style={{flex:1, marginTop:60}}>
-            <TypeCar
-              name="UberX"
-              image="https://links.papareact.com/3pn"
-              description="Economy"
-              price="15"
-            
-            />
-            
-            <View style={{backgroundColor:'#EDEEF0', height:1, marginTop:16}}/>
 
-            <TypeCar
-              name="UberXL"
-              image="https://links.papareact.com/5w8"
-              description="Comfort"
-              price="22" />
-            <View style={{backgroundColor:'#EDEEF0', height:1, marginTop:16}}/>
-
-            <TypeCar
-              name="Uber LUX"
-              image="https://links.papareact.com/7pf"
-              description="Luxury"
-              price="27" />
-            <View style={{backgroundColor:'#EDEEF0', height:1, marginTop:16}}/>
-
-            <TypeCar
-              name="UberX"
-              image="https://links.papareact.com/3pn"
-              description="Economy"
-              price="15"/>
+          <View style={{ marginTop: 68, flexDirection: 'row' }}>
+            <TouchableOpacity
+              onPress={() => setTypeView('cars')}
+              style={{
+                backgroundColor: typeView === 'cars' ? '#000' : 'gray',
+                borderRadius: 20
+              }}>
+              <Text style={{
+                paddingHorizontal: 16,
+                paddingVertical: 8,
+                color: 'white',
+                fontSize: 14,
+                fontWeight: 'bold'
+              }}>
+                Type car
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setTypeView('places')}
+              style={{
+                marginStart: 6,
+                backgroundColor: typeView === 'places' ? '#000' : 'gray',
+                borderRadius: 20
+              }}>
+              <Text
+                style={{
+                  paddingHorizontal: 16,
+                  paddingVertical: 8,
+                  color: 'white',
+                  fontSize: 14,
+                  fontWeight: 'bold'
+                }}>
+                My places
+              </Text>
+            </TouchableOpacity>
           </View>
+          {
+            typeView === 'cars' ?
+              <View style={{ flex: 1, marginTop: 10 }}>
+                <TypeCar
+                  name="UberX"
+                  image="https://links.papareact.com/3pn"
+                  description="Economy"
+                  price="15"
+                />
+                <View style={{ backgroundColor: '#EDEEF0', height: 1, marginTop: 16 }} />
 
+                <TypeCar
+                  name="UberXL"
+                  image="https://links.papareact.com/5w8"
+                  description="Comfort"
+                  price="22" />
+                <View style={{ backgroundColor: '#EDEEF0', height: 1, marginTop: 16 }} />
+
+                <TypeCar
+                  name="Uber LUX"
+                  image="https://links.papareact.com/7pf"
+                  description="Luxury"
+                  price="27" />
+                <View style={{ backgroundColor: '#EDEEF0', height: 1, marginTop: 16 }} />
+
+                <TypeCar
+                  name="UberX"
+                  image="https://links.papareact.com/3pn"
+                  description="Economy"
+                  price="15" />
+              </View> : <></>
+          }
+          {
+            typeView === 'places' ?
+              <View style={{ marginTop: 18 }}>
+                {
+                  places.map((item, index) => {
+                    return (
+                      <PlaceItem
+                        key={index}
+                        objPlace={item}
+                        onClickPlace={(objPlace) => {
+
+                          bottomSheetRef.current?.snapToIndex(0)
+
+                          arrayRoutes(
+                            currentLocation.longitude,
+                            currentLocation.latitude,
+                            objPlace.lng,
+                            objPlace.lat
+                          )
+                          setPlaceLocation({
+                            latitude: objPlace.lat,
+                            longitude: objPlace.lng
+                          })
+                          setAddress(objPlace.title)
+
+                          centerTwoPoins()
+
+
+                        }}
+                      />
+                    )
+                  })
+                }
+              </View>
+              : <></>
+          }
         </BottomSheet>
         <TouchableOpacity
           onPress={() => {
@@ -296,8 +391,25 @@ const saveNewPlace = objPlace => {
           }}>
           <Icon name="compass" size={30} color="#fff" />
         </TouchableOpacity>
-      </GestureHandlerRootView>
+      <TouchableOpacity
+          onPress={() => {
+            nativeStack.navigation.navigate('FlagScreen')
+          }}
+          style={{
+            backgroundColor: '#4285F4',
+            borderRadius: 24,
+            position: 'absolute',
+            bottom: 280,
+            right: 10,
+            width: 50,
+            height: 50,
+            alignItems: 'center',
+            justifyContent: 'center',
 
+          }}>
+          <Icon name="flag" size={30} color="#fff" />
+        </TouchableOpacity>
+      </GestureHandlerRootView>
     </>
   )
 }
