@@ -10,7 +10,6 @@ import { useSelector } from 'react-redux';
 const Stack = createNativeStackNavigator();
 
 function NativeStack() {
-  const { user } = useAuth();
   const { user_firebase } = useSelector(state => state.user_firebase)
   
   if(  user_firebase !== undefined  ){
