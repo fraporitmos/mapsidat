@@ -1,7 +1,8 @@
-import { NEW_PLACE } from "./actions";
+import { NEW_PLACE, SET_USER } from "./actions";
 
 const initialState = {
-    places: []
+    places: [],
+    user_firebase: null
 }
 
 function placesReducer(state = initialState, action){
@@ -14,6 +15,14 @@ function placesReducer(state = initialState, action){
                 ...state,
                 places: [...arrayNewPlaces, action.payload]
             }
+            break;
+       
+        case SET_USER:
+            return {
+                ...state,
+                user_firebase: action.payload
+            }
+            break;
         default:
             return state
     }

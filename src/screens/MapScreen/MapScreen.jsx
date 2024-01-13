@@ -12,8 +12,9 @@ import axios from 'axios'
 import Icon from 'react-native-vector-icons/Feather';
 import TypeCar from '../../components/TypeCar'
 import { useDispatch, useSelector } from 'react-redux'
-import { savePlace } from '../../redux/actions'
+import { savePlace, setUserFirebase } from '../../redux/actions'
 import PlaceItem from '../../components/PlaceItem'
+import { auth } from '../LoginScreen/firebase'
 
 
 const MapScreen = nativeStack => {
@@ -368,6 +369,28 @@ const MapScreen = nativeStack => {
               : <></>
           }
         </BottomSheet>
+        <TouchableOpacity
+          onPress={() => {
+            console.log("loogut")
+            auth.signOut()
+            dispatch( setUserFirebase(undefined) )
+
+
+          }}
+          style={{
+            backgroundColor: '#4285F4',
+            borderRadius: 24,
+            position: 'absolute',
+            bottom: 340,
+            right: 10,
+            width: 50,
+            height: 50,
+            alignItems: 'center',
+            justifyContent: 'center',
+
+          }}>
+          <Icon name="corner-down-right" size={30} color="#fff" />
+        </TouchableOpacity>
         <TouchableOpacity
           onPress={() => {
             if (placeLocation.latitude === 0.0 && placeLocation.latitude === 0.0) {

@@ -11,7 +11,8 @@ const persistConfig = {
 }
 
 const rootReducer = combineReducers({
-    places: placesReducer
+    places: placesReducer,
+    user_firebase: placesReducer
 })
 
 const persistedReducer = persistReducer(persistConfig, rootReducer)

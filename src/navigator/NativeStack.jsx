@@ -5,12 +5,15 @@ import FlagScreen from '../screens/FlagScreen';
 import LoginScreen from '../screens/LoginScreen/LoginScreen';
 import useAuth from '../hooks/useAuth';
 import SignUpScreen from '../screens/SignUpScreen/SignUpScreen';
+import { useSelector } from 'react-redux';
 
 const Stack = createNativeStackNavigator();
 
 function NativeStack() {
-  const {user} =  useAuth()
-  if(user){
+  const { user } = useAuth();
+  const { user_firebase } = useSelector(state => state.user_firebase)
+  
+  if(  user_firebase !== undefined  ){
     return (
       <Stack.Navigator
       screenOptions={
@@ -35,8 +38,6 @@ function NativeStack() {
       >
        <Stack.Screen name="LoginScreen" component={LoginScreen} />
        <Stack.Screen name="SignUpScreen" component={SignUpScreen} />
-
-     
       </Stack.Navigator>
     );
   }

@@ -9,6 +9,10 @@ const SignUpScreen = () => {
     const [password, setPassword] = useState('')
 
     const handleLogin = async() => {
+        //TODO: Validar que los campos no esten vacios
+        //TODO: Validar que el email sea valido
+        //TODO: Validar que el username no contenga caracteres especiales
+        //TODO: Validar que el password sea mayor a 6 caracteres
         if( email && password){
                 try{
                        await createUserWithEmailAndPassword(auth, email, password)     
